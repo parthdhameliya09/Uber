@@ -152,4 +152,93 @@ Example authentication error (401):
 
 ---
 
+# GET /users/profile
+
+## Description
+
+Retrieves the authenticated user's profile information. Requires a valid authentication token.
+
+- URL: `/users/profile`
+- Method: `GET`
+- Authentication: Required (Bearer token or cookie)
+
+## Request headers
+
+- `Authorization: Bearer <token>` (or token in cookie)
+
+Example request:
+
+```
+GET /users/profile
+Authorization: Bearer eyJhbGci...
+```
+
+## Responses / Status codes
+
+- `200 OK` — Profile retrieved successfully.
+  - Response body: `{ "user": { ... } }`
+- `401 Unauthorized` — Missing or invalid authentication token.
+- `500 Internal Server Error` — Unexpected server/database error.
+
+Example successful response (200):
+
+```json
+{
+  "user": {
+    "_id": "60f6c0e7a2d4b5f1a1234567",
+    "fullName": {
+      "firstname": "Alice",
+      "lastname": "Johnson"
+    },
+    "email": "alice@example.com",
+    "socketId": null
+  }
+}
+```
+
+---
+
+# GET /users/logout
+
+## Description
+
+Logs out the authenticated user by invalidating the token and clearing the session.
+
+- URL: `/users/logout`
+- Method: `GET`
+- Authentication: Required (Bearer token or cookie)
+
+## Request headers
+
+- `Authorization: Bearer <token>` (or token in cookie)
+
+Example request:
+
+```
+GET /users/logout
+Authorization: Bearer eyJhbGci...
+```
+
+## Responses / Status codes
+
+- `200 OK` — User logged out successfully.
+  - Response body: `{ "message": "Logout successful" }`
+- `401 Unauthorized` — Missing or invalid authentication token.
+- `500 Internal Server Error` — Unexpected server/database error.
+
+Example successful response (200):
+
+```json
+{
+  "message": "Logout successful"
+}
+```
+
+Notes:
+
+- The token is cleared from cookies and added to the blacklist to prevent reuse.
+- After logout, any requests using the invalidated token will receive a `401 Unauthorized` response.
+
+---
+
 File: Backend/README.md
