@@ -241,4 +241,104 @@ Notes:
 
 ---
 
+# POST /captains/register
+
+## Description
+
+Creates a new captain account with vehicle information and returns an authentication token and the created captain object.
+
+- URL: `/captains/register`
+- Method: `POST`
+- Content-Type: `application/json`
+
+## Request body
+
+Send a JSON body with the following fields:
+
+- `fullName` (object, required)
+  - `firstname` (string, required) — minimum 3 characters
+  - `lastname` (string, optional) — minimum 2 characters if provided
+- `email` (string, required) — must be a valid email address
+- `password` (string, required) — minimum 6 characters
+- `vehicle` (object, required)
+  - `color` (string, required) — minimum 3 characters
+  - `plate` (string, required) — minimum 3 characters
+  - `capacity` (integer, required) — minimum 1
+  - `vehicleType` (string, required) — must be one of: `"car"`, `"motorcycle"`, `"auto"`
+
+Example request:
+
+```json
+{
+  "fullName": {
+    "firstname": "Bob",
+    "lastname": "Driver"
+  },
+  "email": "bob@example.com",
+  "password": "secret123",
+  "vehicle": {
+    "color": "black",
+    "plate": "ABC1234",
+    "capacity": 4,
+    "vehicleType": "car"
+  }
+}
+```
+
+Notes:
+
+- All vehicle fields are required.
+- Vehicle type must be exactly one of: `"car"`, `"motorcycle"`, or `"auto"`.
+- The server validates all fields and will respond with `400 Bad Request` if validation fails.
+
+## Responses / Status codes
+
+- `201 Created` — Captain successfully registered.
+  - Response body: `{ "token": "<jwt>", "captain": { ... } }`
+- `400 Bad Request` — Validation errors. Response body contains an `errors` array describing failures.
+- `409 Conflict` — Email already in use.
+- `500 Internal Server Error` — Unexpected server/database error.
+
+Example successful response (201):
+
+```json
+{
+  "token": "eyJhbGci...",
+  "captain": {
+    "_id": "60f6c0e7a2d4b5f1a7654321",
+    "fullName": {
+      "firstname": "Bob",
+      "lastname": "Driver"
+    },
+    "email": "bob@example.com",
+    "vehicle": {
+      "color": "black",
+      "plate": "ABC1234",
+      "capacity": 4,
+      "vehicleType": "car"
+    }
+  }
+}
+```
+
+Example validation error (400):
+
+```json
+{
+  "errors": [
+    {
+      "msg": "Invalid vehicle type",
+      "param": "vehicle.vehicleType",
+      "location": "body"
+    }
+  ]
+}
+```
+
+## Headers
+
+- `Content-Type: application/json`
+
+---
+
 File: Backend/README.md
