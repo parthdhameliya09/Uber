@@ -253,57 +253,30 @@ Creates a new captain account with vehicle information and returns an authentica
 
 ## Request body
 
-Send a JSON body with the following fields:
-
-- `fullName` (object, required)
-  - `firstname` (string, required) — minimum 3 characters
-  - `lastname` (string, optional) — minimum 2 characters if provided
-- `email` (string, required) — must be a valid email address
-- `password` (string, required) — minimum 6 characters
-- `vehicle` (object, required)
-  - `color` (string, required) — minimum 3 characters
-  - `plate` (string, required) — minimum 3 characters
-  - `capacity` (integer, required) — minimum 1
-  - `vehicleType` (string, required) — must be one of: `"car"`, `"motorcycle"`, `"auto"`
-
-Example request:
-
 ```json
 {
   "fullName": {
-    "firstname": "Bob",
-    "lastname": "Driver"
+    "firstname": "Bob", // Required, min 3 characters
+    "lastname": "Driver" // Optional, min 2 characters if provided
   },
-  "email": "bob@example.com",
-  "password": "secret123",
+  "email": "bob@example.com", // Required, must be valid email
+  "password": "secret123", // Required, min 6 characters
   "vehicle": {
-    "color": "black",
-    "plate": "ABC1234",
-    "capacity": 4,
-    "vehicleType": "car"
+    "color": "black", // Required, min 3 characters
+    "plate": "ABC1234", // Required, min 3 characters
+    "capacity": 4, // Required, must be integer >= 1
+    "vehicleType": "car" // Required, must be: "car", "motorcycle", or "auto"
   }
 }
 ```
 
-Notes:
-
-- All vehicle fields are required.
-- Vehicle type must be exactly one of: `"car"`, `"motorcycle"`, or `"auto"`.
-- The server validates all fields and will respond with `400 Bad Request` if validation fails.
-
 ## Responses / Status codes
 
-- `201 Created` — Captain successfully registered.
-  - Response body: `{ "token": "<jwt>", "captain": { ... } }`
-- `400 Bad Request` — Validation errors. Response body contains an `errors` array describing failures.
-- `409 Conflict` — Email already in use.
-- `500 Internal Server Error` — Unexpected server/database error.
-
-Example successful response (201):
+**201 Created** — Captain successfully registered.
 
 ```json
 {
-  "token": "eyJhbGci...",
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
   "captain": {
     "_id": "60f6c0e7a2d4b5f1a7654321",
     "fullName": {
@@ -321,9 +294,13 @@ Example successful response (201):
 }
 ```
 
-Example validation error (400):
+**400 Bad Request** — Validation errors or email already exists.
 
 ```json
+{
+  "message": "Captain with this email already exists"
+}
+// OR
 {
   "errors": [
     {
@@ -335,9 +312,181 @@ Example validation error (400):
 }
 ```
 
+**500 Internal Server Error** — Unexpected server/database error.
+
 ## Headers
 
 - `Content-Type: application/json`
+
+---
+
+# POST /captains/login
+
+## Description
+
+Authenticates an existing captain and returns an authentication token and the captain object.
+
+- URL: `/captains/login`
+- Method: `POST`
+- Content-Type: `application/json`
+
+## Request body
+
+```json
+{
+  "email": "bob@example.com", // Required, must be valid email
+  "password": "secret123" // Required, min 6 characters
+}
+```
+
+## Responses / Status codes
+
+**200 OK** — Captain successfully authenticated.
+
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "captain": {
+    "_id": "60f6c0e7a2d4b5f1a7654321",
+    "fullName": {
+      "firstname": "Bob",
+      "lastname": "Driver"
+    },
+    "email": "bob@example.com",
+    "vehicle": {
+      "color": "black",
+      "plate": "ABC1234",
+      "capacity": 4,
+      "vehicleType": "car"
+    }
+  }
+}
+```
+
+**400 Bad Request** — Validation errors.
+
+```json
+{
+  "errors": [
+    {
+      "msg": "Invalid email address",
+      "param": "email",
+      "location": "body"
+    }
+  ]
+}
+```
+
+**401 Unauthorized** — Invalid email or password.
+
+```json
+{
+  "message": "Invalid email or password"
+}
+```
+
+**500 Internal Server Error** — Unexpected server/database error.
+
+## Headers
+
+- `Content-Type: application/json`
+
+---
+
+# GET /captains/profile
+
+## Description
+
+Retrieves the authenticated captain's profile information. Requires a valid authentication token.
+
+- URL: `/captains/profile`
+- Method: `GET`
+- Authentication: Required (Bearer token or cookie)
+
+## Request headers
+
+```
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+```
+
+## Responses / Status codes
+
+**200 OK** — Profile retrieved successfully.
+
+```json
+{
+  "captain": {
+    "_id": "60f6c0e7a2d4b5f1a7654321",
+    "fullName": {
+      "firstname": "Bob",
+      "lastname": "Driver"
+    },
+    "email": "bob@example.com",
+    "vehicle": {
+      "color": "black",
+      "plate": "ABC1234",
+      "capacity": 4,
+      "vehicleType": "car"
+    }
+  }
+}
+```
+
+**401 Unauthorized** — Missing or invalid authentication token.
+
+```json
+{
+  "message": "Unauthorized"
+}
+```
+
+**500 Internal Server Error** — Unexpected server/database error.
+
+## Headers
+
+- `Authorization: Bearer <token>` (required)
+
+---
+
+# GET /captains/logout
+
+## Description
+
+Logs out the authenticated captain by invalidating the token and clearing the session.
+
+- URL: `/captains/logout`
+- Method: `GET`
+- Authentication: Required (Bearer token or cookie)
+
+## Request headers
+
+```
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+```
+
+## Responses / Status codes
+
+**200 OK** — Captain logged out successfully.
+
+```json
+{
+  "message": "Logged out successfully"
+}
+```
+
+**401 Unauthorized** — Missing or invalid authentication token.
+
+```json
+{
+  "message": "Unauthorized"
+}
+```
+
+**500 Internal Server Error** — Unexpected server/database error.
+
+## Headers
+
+- `Authorization: Bearer <token>` (required)
 
 ---
 
